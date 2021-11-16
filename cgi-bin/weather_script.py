@@ -1,27 +1,92 @@
 #!/usr/local/bin/python3
-import state_data
-import states
+import urllib.request
+import urllib.error
+import json
 
-states = state_data.createCache(state_data, 5)
 
+#####################################################################################################################
+# CLEAN DATA
 
+state_data = {'AL': (32.799, -86.8073), 'AK': (61.385, -152.2683), 'AZ': (33.7712, -111.3877), 'AR': (34.9513, -92.3809), 'CA': (36.17, -119.7462), 'CO': (39.0646, -105.3272), 'CT': (41.5834, -72.7622), 'DE': (39.3498, -75.5148), 'FL': (27.8333, -81.717), 'GA': (32.9866, -83.6487), 'HI': (21.1098, -157.5311), 'ID': (44.2394, -114.5103), 'IL': (40.3363, -89.0022), 'IN': (39.8647, -86.2604), 'IA': (42.0046, -93.214), 'KS': (38.5111, -96.8005), 'KY': (37.669, -84.6514), 'LA': (31.1801, -91.8749), 'ME': (44.6074, -69.3977), 'MD': (39.0724, -76.7902), 'MA': (42.2373, -71.5314), 'MI': (43.3504, -84.5603), 'MN': (45.7326, -93.9196), 'MS': (32.7673, -89.6812), 'MO': (38.4623, -92.302), 'MT': (46.9048, -110.3261), 'NE': (41.1289, -98.2883), 'NV': (38.4199, -117.1219), 'NH': (43.4108, -71.5653), 'NJ': (40.314, -74.5089), 'NM': (34.8375, -106.2371), 'NY': (42.1497, -74.9384), 'NC': (35.6411, -79.8431), 'ND': (47.5362, -99.793), 'OH': (40.3736, -82.7755), 'OK': (35.5376, -96.9247), 'OR': (44.5672, -122.1269), 'PA': (40.5773, -77.264), 'RI': (41.6772, -71.5101), 'SC': (33.8191, -80.9066), 'SD': (44.2853, -99.4632), 'TN': (35.7449, -86.7489), 'TX': (31.106, -97.6475), 'UT': (40.1135, -111.8535), 'VT': (44.0407, -72.7093), 'VA': (37.768, -78.2057), 'WA': (47.3917, -121.5708), 'WV': (38.468, -80.9696), 'WI': (44.2563, -89.6385), 'WY': (42.7475, -107.2085)}
+
+#####################################################################################################################
+# ADD FUNCTIONS
+
+def getForecast(longlat: tuple[float]):
+    response = urllib.request.urlopen(f'https://api.weather.gov/points/{longlat[0]},{longlat[1]}')
+    data = json.load(response)
+    forecast_link = data['properties']['forecast']
+
+    try:
+        temp_res = urllib.request.urlopen(forecast_link)
+    except urllib.error.HTTPError as errh:
+        print(errh)
+        return None
+    temp_data = json.load(temp_res)
+    temp = temp_data['properties']['periods'][1]['temperature']
+    return temp
+
+def getColor(temp: int):
+    if isinstance(temp, int | float):
+        if temp < 10:
+            return 'blue'
+        elif temp <= 30:
+            return 'cyan'
+        elif temp <= 50:
+            return 'green'
+        elif temp <=80:
+            return 'orange'
+        else:
+            return 'red'
+    else:
+        return 'gray'
+
+def createCache(state_data: dict, request_limit: int):
+    cache = []
+    for key, value in state_data.items():
+        temp = getForecast(value)
+        if temp is not None:
+            color = getColor(temp)
+            cache.append((key.lower(), color))
+        if len(cache) > request_limit or len(cache) > 49:
+            print(f'Here are the {request_limit} states: {cache}')
+            break
+    return cache
+
+def getJS(list_of_states: list):
+    js_string = ''
+    for state_key in list_of_states:
+        js_string += f"var {state_key[0]} = document.getElementsByClassName('{state_key[0]}')[0];\n"
+        js_string += f"{state_key[0]}.setAttribute('fill', '{state_key[1]}');\n\n"
+    return js_string
+
+#####################################################################################################################
+# GENERATE JAVASCRIPT
+
+cache_list = createCache(state_data, 5)
+javascript_insert = getJS(cache_list)
+
+#####################################################################################################################
 
 print("Content-type: text/html")
 print() # This extra newline is important!
 print('''
  <html>
  <head>
-   <title>Weather Map Lab by Hidrogo</title>
+   <title>Weather Map Lab by Hidrogo</title>''')
 
-<script type="text/javascript">
-window.onload = function() {
-var col = document.getElementsByClassName('co')[0];
-col.setAttribute('fill', '#CFB87C');
+print('''<script type="text/javascript">
+window.onload = function() {''')
 
+# add my javascript
+print(f'''{javascript_insert}
+''')
+
+print('''
 };
-</script>
+</script>''')
 
-
+print('''
  </head>
  <body>
 
@@ -323,8 +388,4 @@ Place this code in the empty space below. */
 
  </body>
  </html>''')
-
-
-
-# <object id="svg-object" data="../US_states.svg" type="image/svg+xml"> </object>
 
