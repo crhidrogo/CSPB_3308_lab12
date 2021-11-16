@@ -2,39 +2,6 @@ import urllib.request
 import urllib.error
 import json
 
-
-# give a latitude and longitude
-lat, lon = 36.1700,-119.7462
-
-# call first API
-response = urllib.request.urlopen(f'https://api.weather.gov/points/{lat},{lon}')
-data = json.load(response)
-
-# Below is for exploring API
-'''
-pp = pprint.PrettyPrinter(width=41, compact=True)
-keys = [key for key in data.keys()]
-print(f"Top level keys are {keys}")
-print()
-values = [vals for vals in data.values()]
-for key, val in data.items():
-    print(f"The key is {key}\n\n\nAnd the value is {val}\nThe type of the value is {type(val)}\n\n")
-'''
-
-# get second API link
-forcast = data['properties']['forecast']
-print(f'forcast link is: {forcast}')
-
-# Open second API link
-temp_res = urllib.request.urlopen(forcast)
-temp_data = json.load(temp_res)
-
-# get data from API
-temp = temp_data['properties']['periods'][1]['temperature']
-
-# print. dat. SHIT. OUT.
-print(f'Temperature is {temp}')
-
 # Now we make it a function!
 def getForecast(longlat: tuple[float]):
     response = urllib.request.urlopen(f'https://api.weather.gov/points/{longlat[0]},{longlat[1]}')
@@ -50,8 +17,7 @@ def getForecast(longlat: tuple[float]):
     temp = temp_data['properties']['periods'][1]['temperature']
     return temp
 
-def getColor(state_data: tuple[any]):
-    temp = state_data[1]
+def getColor(temp: int):
     if isinstance(temp, int | float):
         if temp < 10:
             return 'blue'
@@ -65,3 +31,35 @@ def getColor(state_data: tuple[any]):
             return 'red'
     else:
         return 'gray'
+
+# # give a latitude and longitude
+# lat, lon = 36.1700,-119.7462
+#
+# # call first API
+# response = urllib.request.urlopen(f'https://api.weather.gov/points/{lat},{lon}')
+# data = json.load(response)
+#
+# # Below is for exploring API
+# '''
+# pp = pprint.PrettyPrinter(width=41, compact=True)
+# keys = [key for key in data.keys()]
+# print(f"Top level keys are {keys}")
+# print()
+# values = [vals for vals in data.values()]
+# for key, val in data.items():
+#     print(f"The key is {key}\n\n\nAnd the value is {val}\nThe type of the value is {type(val)}\n\n")
+# '''
+#
+# # get second API link
+# forcast = data['properties']['forecast']
+# print(f'forcast link is: {forcast}')
+#
+# # Open second API link
+# temp_res = urllib.request.urlopen(forcast)
+# temp_data = json.load(temp_res)
+#
+# # get data from API
+# temp = temp_data['properties']['periods'][1]['temperature']
+#
+# # print. dat. SHIT. OUT.
+# print(f'Temperature is {temp}')
