@@ -49,3 +49,19 @@ def getForecast(longlat: tuple[float]):
     temp_data = json.load(temp_res)
     temp = temp_data['properties']['periods'][1]['temperature']
     return temp
+
+def getColor(state_data: tuple[any]):
+    temp = state_data[1]
+    if isinstance(temp, int | float):
+        if temp < 10:
+            return 'blue'
+        elif temp <= 30:
+            return 'cyan'
+        elif temp <= 50:
+            return 'green'
+        elif temp <=80:
+            return 'orange'
+        else:
+            return 'red'
+    else:
+        return 'gray'
