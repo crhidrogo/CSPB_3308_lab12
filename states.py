@@ -1,6 +1,7 @@
 import urllib.request
+import urllib.error
 import json
-import pprint
+
 
 # give a latitude and longitude
 lat, lon = 36.1700,-119.7462
@@ -33,3 +34,18 @@ temp = temp_data['properties']['periods'][1]['temperature']
 
 # print. dat. SHIT. OUT.
 print(f'Temperature is {temp}')
+
+# Now we make it a function!
+def getForecast(longlat: tuple[float]):
+    response = urllib.request.urlopen(f'https://api.weather.gov/points/{longlat[0]},{longlat[1]}')
+    data = json.load(response)
+    forecast_link = data['properties']['forecast']
+
+    try:
+        temp_res = urllib.request.urlopen(forecast_link)
+    except urllib.error.HTTPError as errh:
+        print("Http Error:", errh)
+        return None
+    temp_data = json.load(temp_res)
+    temp = temp_data['properties']['periods'][1]['temperature']
+    return temp
